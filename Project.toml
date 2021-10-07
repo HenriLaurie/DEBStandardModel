@@ -1,0 +1,15 @@
+name = "DEBStandardModel"
+uuid = "5053cb37-59c1-4f0b-8100-a26c691fb68c"
+authors = ["HenriLaurie <henri.laurie@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+
+[compat]
+julia = "^1"
