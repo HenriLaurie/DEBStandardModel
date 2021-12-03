@@ -1,15 +1,29 @@
 module DEBStandardModel
 
-using DifferentialEquations
+using DifferentialEquations, Plots
 
-struct ShortParams end #for getlbDEBstd
+struct ShortParams # reduced form suitable for solving for E0.
+  end
 
-struct LongParams end #for getlbDEBstd
+struct stdParams  # growth only (no reproduction or mortality or respiration etc) 
+  f; g; kap; k; lT; feedingyes; adultno
+  end 
+
+struct LongParams # contains the full problem
+  growthparams::stdParams
+  maturityparams::Vector{Float64}
+  uE0::Float64
+  end
+
+
 
 #TODO
-# getE0() [solve eb = f ]
+# plot l(tau) given AmP parameters as LongParams
+# convert to plot of L(t) 
+# getE0() [solves eb = f, given  uHb]
 # runDEBstd(f, p::LongParams, timespan)
-  ## first runs getE0, then runs model for some multiple of time at birth, plots l(t)
+  ## runs getE0(), then then plots l(t), sets its own timespan 
+# add reporting tau_b, l_b, maybe uHb also
 
 function scaledDEBstd(du, u, p::ShortParams, t)  # eqns 2.26 to 2.28, DEB book 3rd ed
     # this version only works for embryo phase; it is used to determine tau_b 
@@ -20,7 +34,7 @@ function scaledDEBstd(du, u, p::ShortParams, t)  # eqns 2.26 to 2.28, DEB book 3
     du[3] = (1-kap) * uE*l^2 * (g+l)/(uE+l^3) - k*uH
   end
 
-function scaledDEBstd(du, u, p::LongParams, t)  # eqns 2.26 to 2.28, DEB book 3rd ed
+function scaledDEBstd(du, u, p::stdParams, t)  # eqns 2.26 to 2.28, DEB book 3rd ed
     # requires the parameter uE0 for initial condition
     # and juvreached better reset via callback at tau_b
     # and adultreached via callback on uH 
@@ -30,7 +44,7 @@ function scaledDEBstd(du, u, p::LongParams, t)  # eqns 2.26 to 2.28, DEB book 3r
     du[1] = juvreached*f*l^2 - uE*l^2 * (g+l)/(uE+l^3)
     du[2] = (1.0/3.0)*(g*uE - l^4 - lT)/(uE + l^3)
     du[3] = (1-adultreached)*((1-kap) * uE*l^2 * (g+l)/(uE+l^3) - k*uH )
-end
+  end
 
 function getscaledparams(fileAmPparsCSV)
   # IN: 
@@ -41,9 +55,43 @@ function getscaledparams(fileAmPparsCSV)
 
   #read file to dictionary
   #check that all names are there
-  #compute 
+  #compute and pack scaled parmeters into LongParams object
 
-end 
+  
+  ## Hons course version: stdAmPparams = [f, g, kap, k, lT, feedingyes, adultno] 
+  ## while uE0 is used to set initial condition 
+  ## and uHb, uHb are used to set callbacks for solve
+  ## 11 params in all 
+  ## maybe make LongParams named tuple (stdAmParams, maturitylevels, uE0)
+  ## and have a dummy/output function that sets up problem, solves it, plots l(t)
+  end 
+
+function output(params::LongParams, tspan)
+  stdAmPparams, maturitylevels, uE0 = params  
+  u0 = [uE0, 0.0, 0.0]
+  prob = ODEProblem(scaledDEBstd, u0, stdAmPparams, t)
+
+  #create stdDEBcallback
+  uhb, uhp = maturitylevels
+  function reached_uHb(u, t, integrator)     u[3] - uhb         end
+  function startfeeding!(integrator)      
+    integrator.p[6] = 1.0 
+    @show integrator.t    #uncomment this to see age at birth
+  end
+  cbonuHb = ContinuousCallback(reached_uHb, startfeeding!)
+
+  function reached_uHp(u, t, integrator) u[3] - uhp end
+  function nowadult!(integrator) integrator.p[7] = 0.0 end
+  cbonuHp = ContinuousCallback(reached_uHp, nowadult!)
+  stdDEBcallback = CallbackSet(cbonuHb, cbonuHp)
+
+  #solve and plot
+  sol = solve(prob, stdDEBcallback)     
+  plot(sol, vars=2 )
+  # plot(title = "labelslater" ) #maybe add timestamp?
+
+end
+
 
 end # module
 

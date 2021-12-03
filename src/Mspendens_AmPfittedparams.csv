@@ -1,0 +1,19 @@
+T_A,   9000.0,   Arrhenius temperature
+p_Am,  6999.17,  "{p_Am}, spec assimilation flux"
+F_m,   6.5,      "{F_m}, max spec searching rate"
+kap_X, 0.8,      digestion efficiency of food to reserve
+kap_P, 0.1,      faecation efficiency of food to faeces
+v,     0.20062,  energy conductance
+kap,   0.99545,  allocation fraction to soma
+kap_R, 0.95,     reproduction efficiency
+p_M,   4129.77,  "[p_M], vol-spec somatic maint"
+p_T,   0.0,      "{p_T}, surf-spec somatic maint"
+k_J,   0.002,    maturity maint rate coefficient
+E_G,   7325.54,  "[E_G], spec cost for structure"
+E_Hb,  57.59,    maturity at birth
+E_Hp,  5177,     maturity at puberty
+h_a,   1.314e-13,Weibull aging acceleration
+s_G,   0.001,    Gompertz stress coefficient
+T_ref, 293.15,   Reference temperature
+z,     1.0,      zoom factor     (? not sure where to read this)
+T_body,312.65,   body temperature (? not sure it's there at all!)
