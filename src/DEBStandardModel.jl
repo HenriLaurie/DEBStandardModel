@@ -1,6 +1,6 @@
 module DEBStandardModel
 
-using DifferentialEquations, Plots
+using DifferentialEquations, Plots, DelimitedFiles
 
 struct ShortParams # reduced form suitable for solving for E0.
   end
@@ -54,10 +54,37 @@ function getscaledparams(fileAmPparsCSV)
   ## p::LongParams
 
   #read file to dictionary
-  #check that all names are there
+  #= 
+     I decided to standardise on Add-my-Pet symbols for parameter names.
+     Hence the long list below, I don't know how to make a name from a string.
+  =#
+  lines = readdlm("Msplendens_AmPfittedparams.csv",',') 
+  parsdict = Dict(lines[i,1] => lines[i,2] for i = 1:size(lines)[1])
+  T_ref = parsdict("T_ref")
+  E_Hb = parsdict( "E_Hb")
+  s_G = parsdict( "s_G")
+  p_Am = parsdict("p_Am")
+  T_body = parsdict("T_body")
+  E_Hp = parsdict("E_Hp")
+  p_M = parsdict("p_M")
+  T_A = parsdict("T_A")
+  z = parsdict("z")
+  kap_P = parsdict("kap_P")
+  h_a = parsdict("h_a")
+  v = parsdict("v")
+  E_G = parsdict("E_G")
+  kap_R = parsdict("kap_R")
+  kap_X = parsdict("kap_X")
+  k_J = parsdict("k_J")
+  F_m = parsdict("F_m")
+  p_T = parsdict("p_T")
+  kap = parsdict("kap")
+
   #compute and pack scaled parmeters into LongParams object
 
-  
+
+    
+  end
   ## Hons course version: stdAmPparams = [f, g, kap, k, lT, feedingyes, adultno] 
   ## while uE0 is used to set initial condition 
   ## and uHb, uHb are used to set callbacks for solve
