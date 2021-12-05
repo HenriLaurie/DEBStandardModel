@@ -57,6 +57,10 @@ function getscaledparams(fileAmPparsCSV)
   #= 
      I decided to standardise on Add-my-Pet symbols for parameter names.
      Hence the long list below, I don't know how to make a name from a string.
+     
+     Still a problem with f, as AmP gives a constant but I'd like it to be 
+     easily specified without rerunning this code.
+     A problem to be solved later, here I just set f to 1.
   =#
   lines = readdlm("Msplendens_AmPfittedparams.csv",',') 
   parsdict = Dict(lines[i,1] => lines[i,2] for i = 1:size(lines)[1])
@@ -81,8 +85,23 @@ function getscaledparams(fileAmPparsCSV)
   kap = parsdict("kap")
 
   #compute and pack scaled parmeters into LongParams object
+  f   = 1.0
+  k_M = p_M/E_G 
+  E_m = p_Am/v    
+  g   = E_G/(kap*E_m)  
+  L_m = v/(g*k_M)
+  L_T = p_T/p_M
+  k   = k_J/k_M  
+  lT  = L_T/L_m
+  feedingyes, adultno = 0.0, 0.0
+  uHb = E_Hb/(g*E_m*L_m^3) 
+  uHp = E_Hp/(g*E_m*L_m^3) 
+  uE0 = E0/(g*E_m*L_m^3)
 
-
+  growthpars = stdParams(f, g, kap, k, lT, feedingyes, adultno)
+  maturitypars = [uHb, uHp]
+ 
+  return LongParams(growthpars, maturitypars, uE0) 
     
   end
   ## Hons course version: stdAmPparams = [f, g, kap, k, lT, feedingyes, adultno] 
