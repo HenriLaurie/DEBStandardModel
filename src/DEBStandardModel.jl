@@ -1,5 +1,7 @@
 module DEBStandardModel
 
+
+
 using DifferentialEquations, Plots, DelimitedFiles
 
 struct ShortParams # reduced form suitable for solving for E0.
@@ -48,7 +50,7 @@ function scaledDEBstd(du, u, p::stdParams, t)  # eqns 2.26 to 2.28, DEB book 3rd
 
 function getscaledparams(fileAmPparsCSV)
   # IN: 
-  ## fileAmPparsCSV       name, value  pairs
+  ## fileAmPparsCSV      string giving (path?) filename with an AmP name, value per row
   #
   # OUT:
   ## p::LongParams
@@ -62,7 +64,7 @@ function getscaledparams(fileAmPparsCSV)
      easily specified without rerunning this code.
      A problem to be solved later, here I just set f to 1.
   =#
-  lines = readdlm("Msplendens_AmPfittedparams.csv",',') 
+  lines = readdlm(fileAmPparsCSV,',') 
   parsdict = Dict(lines[i,1] => lines[i,2] for i = 1:size(lines)[1])
   T_ref = parsdict("T_ref")
   E_Hb = parsdict( "E_Hb")
@@ -123,9 +125,8 @@ function output(params::LongParams, tspan)
   function startfeeding!(integrator)      
     integrator.p[6] = 1.0 
     @show integrator.t    #uncomment this to see age at birth
-  end
+    end
   cbonuHb = ContinuousCallback(reached_uHb, startfeeding!)
-
   function reached_uHp(u, t, integrator) u[3] - uhp end
   function nowadult!(integrator) integrator.p[7] = 0.0 end
   cbonuHp = ContinuousCallback(reached_uHp, nowadult!)
@@ -138,6 +139,12 @@ function output(params::LongParams, tspan)
 
 end
 
+function rundemo(datafile, tspan) # and another method for f as function? 
+  runparams = getscaledparams(datafile)
+  output(runparams, tspan)
+  end
+
+# test: rundemom("Msplendens_AmPfittedparams.csv", [0.0, 20.0]) should produce a specific figure
 
 end # module
 
@@ -146,8 +153,8 @@ NOTES
 
 First target: plot entire l(t) given the AmP parameter values, also
 return age at birth and length at birth.
-The seven LongParams parameters here need additionally the initial value.
-f is assumed constant.
+Ten LongParams values: seven for growth model, two for maturity switches, one for initial state.
+Environment via f is constant.
 
 Second target: determine E0, given E_H^b and assuming e0 = f (or, if f is variable, then
 equal to average of f)
