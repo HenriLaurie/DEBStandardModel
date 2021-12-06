@@ -1,6 +1,7 @@
+"""
+This is where module will be documented
+"""
 module DEBStandardModel
-
-
 
 using DifferentialEquations, Plots, DelimitedFiles
 
@@ -19,7 +20,7 @@ struct LongParams # contains the full problem
 
 
 
-#TODO
+  #TODO
 # plot l(tau) given AmP parameters as LongParams
 # convert to plot of L(t) 
 # getE0() [solves eb = f, given  uHb]
@@ -137,7 +138,7 @@ function output(params::LongParams, tspan)
   plot(sol, vars=2 )
   # plot(title = "labelslater" ) #maybe add timestamp?
 
-end
+  end
 
 function rundemo(datafile, tspan) # and another method for f as function? 
   runparams = getscaledparams(datafile)
