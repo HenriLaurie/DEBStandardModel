@@ -1,26 +1,7 @@
 """
 This is where module will be documented
-"""
-module DEBStandardModel
 
-using DifferentialEquations, Plots, DelimitedFiles
-
-struct ShortParams # reduced form suitable for solving for E0.
-  end
-
-struct stdParams  # growth only (no reproduction or mortality or respiration etc) 
-  f; g; kap; k; lT; feedingyes; adultno
-  end 
-
-struct LongParams # contains the full problem
-  growthparams::stdParams
-  maturityparams::Vector{Float64}
-  uE0::Float64
-  end
-
-
-
-  #TODO
+#TODO
 # plot l(tau) given AmP parameters as LongParams
 # convert to plot of L(t) 
 # getE0() [solves eb = f, given  uHb]
@@ -28,7 +9,26 @@ struct LongParams # contains the full problem
   ## runs getE0(), then then plots l(t), sets its own timespan 
 # add reporting tau_b, l_b, maybe uHb also
 
-function scaledDEBstd(du, u, p::ShortParams, t)  # eqns 2.26 to 2.28, DEB book 3rd ed
+
+"""
+module DEBStandardModel
+
+  using DifferentialEquations, Plots, DelimitedFiles
+
+  struct ShortParams # reduced form suitable for solving for E0.
+  end
+
+  struct stdParams  # growth only (no reproduction or mortality or respiration etc) 
+  f; g; kap; k; lT; feedingyes; adultno
+  end 
+
+  struct LongParams # contains the full problem
+  growthparams::stdParams
+  maturityparams::Vector{Float64}
+  uE0::Float64
+  end
+
+  function scaledDEBstd(du, u, p::ShortParams, t)  # eqns 2.26 to 2.28, DEB book 3rd ed
     # this version only works for embryo phase; it is used to determine tau_b 
     g, kap, k  = p
     uE, l, uH = u
@@ -37,7 +37,7 @@ function scaledDEBstd(du, u, p::ShortParams, t)  # eqns 2.26 to 2.28, DEB book 3
     du[3] = (1-kap) * uE*l^2 * (g+l)/(uE+l^3) - k*uH
   end
 
-function scaledDEBstd(du, u, p::stdParams, t)  # eqns 2.26 to 2.28, DEB book 3rd ed
+  function scaledDEBstd(du, u, p::stdParams, t)  # eqns 2.26 to 2.28, DEB book 3rd ed
     # requires the parameter uE0 for initial condition
     # and juvreached better reset via callback at tau_b
     # and adultreached via callback on uH 
@@ -49,62 +49,62 @@ function scaledDEBstd(du, u, p::stdParams, t)  # eqns 2.26 to 2.28, DEB book 3rd
     du[3] = (1-adultreached)*((1-kap) * uE*l^2 * (g+l)/(uE+l^3) - k*uH )
   end
 
-function getscaledparams(fileAmPparsCSV)
-  # IN: 
-  ## fileAmPparsCSV      string giving (path?) filename with an AmP name, value per row
-  #
-  # OUT:
-  ## p::LongParams
+  function getscaledparams(fileAmPparsCSV)
+    # IN: 
+    ## fileAmPparsCSV      string giving (path?) filename with an AmP name, value per row
+    #
+    # OUT:
+    ## p::LongParams
 
-  #read file to dictionary
-  #= 
+    #read file to dictionary
+    #= 
      I decided to standardise on Add-my-Pet symbols for parameter names.
      Hence the long list below, I don't know how to make a name from a string.
      
      Still a problem with f, as AmP gives a constant but I'd like it to be 
      easily specified without rerunning this code.
      A problem to be solved later, here I just set f to 1.
-  =#
-  lines = readdlm(fileAmPparsCSV,',') 
-  parsdict = Dict(lines[i,1] => lines[i,2] for i = 1:size(lines)[1])
-  T_ref = parsdict("T_ref")
-  E_Hb = parsdict( "E_Hb")
-  s_G = parsdict( "s_G")
-  p_Am = parsdict("p_Am")
-  T_body = parsdict("T_body")
-  E_Hp = parsdict("E_Hp")
-  p_M = parsdict("p_M")
-  T_A = parsdict("T_A")
-  z = parsdict("z")
-  kap_P = parsdict("kap_P")
-  h_a = parsdict("h_a")
-  v = parsdict("v")
-  E_G = parsdict("E_G")
-  kap_R = parsdict("kap_R")
-  kap_X = parsdict("kap_X")
-  k_J = parsdict("k_J")
-  F_m = parsdict("F_m")
-  p_T = parsdict("p_T")
-  kap = parsdict("kap")
+    =#
+    lines = readdlm(fileAmPparsCSV,',') 
+    parsdict = Dict(lines[i,1] => lines[i,2] for i = 1:size(lines)[1])
+    T_ref = parsdict("T_ref")
+    E_Hb = parsdict( "E_Hb")
+    s_G = parsdict( "s_G")
+    p_Am = parsdict("p_Am")
+    T_body = parsdict("T_body")
+    E_Hp = parsdict("E_Hp")
+    p_M = parsdict("p_M")
+    T_A = parsdict("T_A")
+    z = parsdict("z")
+    kap_P = parsdict("kap_P")
+    h_a = parsdict("h_a")
+    v = parsdict("v")
+    E_G = parsdict("E_G")
+    kap_R = parsdict("kap_R")
+    kap_X = parsdict("kap_X")
+    k_J = parsdict("k_J")
+    F_m = parsdict("F_m")
+    p_T = parsdict("p_T")
+    kap = parsdict("kap")
 
-  #compute and pack scaled parmeters into LongParams object
-  f   = 1.0
-  k_M = p_M/E_G 
-  E_m = p_Am/v    
-  g   = E_G/(kap*E_m)  
-  L_m = v/(g*k_M)
-  L_T = p_T/p_M
-  k   = k_J/k_M  
-  lT  = L_T/L_m
-  feedingyes, adultno = 0.0, 0.0
-  uHb = E_Hb/(g*E_m*L_m^3) 
-  uHp = E_Hp/(g*E_m*L_m^3) 
-  uE0 = E0/(g*E_m*L_m^3)
+    #compute and pack scaled parmeters into LongParams object
+    f   = 1.0
+    k_M = p_M/E_G 
+    E_m = p_Am/v    
+    g   = E_G/(kap*E_m)  
+    L_m = v/(g*k_M)
+    L_T = p_T/p_M
+    k   = k_J/k_M  
+    lT  = L_T/L_m
+    feedingyes, adultno = 0.0, 0.0
+    uHb = E_Hb/(g*E_m*L_m^3) 
+    uHp = E_Hp/(g*E_m*L_m^3) 
+    uE0 = E0/(g*E_m*L_m^3)
 
-  growthpars = stdParams(f, g, kap, k, lT, feedingyes, adultno)
-  maturitypars = [uHb, uHp]
- 
-  return LongParams(growthpars, maturitypars, uE0) 
+    growthpars = stdParams(f, g, kap, k, lT, feedingyes, adultno)
+    maturitypars = [uHb, uHp]
+  
+    return LongParams(growthpars, maturitypars, uE0) 
     
   end
   ## Hons course version: stdAmPparams = [f, g, kap, k, lT, feedingyes, adultno] 
@@ -113,7 +113,6 @@ function getscaledparams(fileAmPparsCSV)
   ## 11 params in all 
   ## maybe make LongParams named tuple (stdAmParams, maturitylevels, uE0)
   ## and have a dummy/output function that sets up problem, solves it, plots l(t)
-  end 
 
 function output(params::LongParams, tspan)
   stdAmPparams, maturitylevels, uE0 = params  
@@ -127,9 +126,9 @@ function output(params::LongParams, tspan)
     integrator.p[6] = 1.0 
     @show integrator.t    #uncomment this to see age at birth
     end
-  cbonuHb = ContinuousCallback(reached_uHb, startfeeding!)
   function reached_uHp(u, t, integrator) u[3] - uhp end
   function nowadult!(integrator) integrator.p[7] = 0.0 end
+  cbonuHb = ContinuousCallback(reached_uHb, startfeeding!)
   cbonuHp = ContinuousCallback(reached_uHp, nowadult!)
   stdDEBcallback = CallbackSet(cbonuHb, cbonuHp)
 
@@ -147,7 +146,7 @@ function rundemo(datafile, tspan) # and another method for f as function?
 
 # test: rundemom("Msplendens_AmPfittedparams.csv", [0.0, 20.0]) should produce a specific figure
 
-end # module
+  #end # module
 
 #=
 NOTES
