@@ -1,3 +1,5 @@
+E0,    30642.1,  initial reserve 
+f,     1.0,      functional response
 T_A,   9000.0,   Arrhenius temperature
 p_Am,  6999.17,  "{p_Am}, spec assimilation flux"
 F_m,   6.5,      "{F_m}, max spec searching rate"
