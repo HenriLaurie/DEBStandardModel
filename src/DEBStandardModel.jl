@@ -14,6 +14,7 @@ This is where module will be documented
 module DEBStandardModel
 
   using DifferentialEquations, Plots, DelimitedFiles
+  gr()             #specify GR backend
 
   struct DEBstd  # specifies std model
     ## matching of function to u0 and parameters rests on user
@@ -101,7 +102,6 @@ function makeparsdict(csvfilename)
   ## and have a dummy/output function that sets up problem, solves it, plots l(t)
 
 function output(p::DEBstd, tspan)
-  show(tspan); println("In output")
   f, growthpars, maturitypars, u0 = p.fname, p.growthparams, p.maturityparams, p.u0  
   prob = ODEProblem(f, u0, tspan, growthpars)
 
@@ -127,7 +127,6 @@ function output(p::DEBstd, tspan)
 
 function rundemo(datafile, tspan) # and another method for f as function? 
   parsdict = makeparsdict(datafile)
- show(tspan) 
   runparams = packDEBscaled_std(parsdict)
   output(runparams, tspan)
   end

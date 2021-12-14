@@ -1,9 +1,9 @@
-using DifferentialEquations, Plots
-using DEBStandardModel
+using Test
+using DEBStandardModel, Plots  #NB: for test to pass, GR backend required
+gr()                        
 
-p = [0.0, 0.0] #3 parameters
+#DEBStandardModel.rundemo("../src/Msplendens_AmPfittedparams.csv", (0.0, 3.0))
 
-println("$(p)")
-
-
-DEBStandardModel.scaledDEBstd(0, 0, p, 0)
+@test typeof(DEBStandardModel.makeparsdict("src/Msplendens_AmPfittedparams.csv")) == Dict{SubString{String}, Real}
+#@test typeof(DEBStandardModel.makeparsdict("../src/Msplendens_AmPfittedparams.csv")) == Dict
+@test  typeof(DEBStandardModel.rundemo("src/Msplendens_AmPfittedparams.csv", (0.0, 3.0)))  == Plots.Plot{Plots.GRBackend}
